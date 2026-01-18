@@ -1,0 +1,39 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "functions": {
+    "api/serverless/*.py": {
+      "maxDuration": 60
+    },
+    "api/serverless-cron/*.py": {
+      "maxDuration": 120
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/serverless/:path*"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/reminder-dispatcher",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/overdue-scanner",
+      "schedule": "*/15 * * * *"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_API_URL": {
+      "description": "URL for the backend API",
+      "value": "https://hakathon2-ii.vercel.app/api"
+    },
+    "NEXT_PUBLIC_AUTH_PROVIDER": {
+      "description": "Authentication provider",
+      "value": "authjs"
+    }
+  }
+}
