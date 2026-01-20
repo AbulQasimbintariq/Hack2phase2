@@ -12,9 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # JWT configuration
-SECRET_KEY = os.getenv("SECRET_KEY")
-if not SECRET_KEY:
-    raise ValueError("SECRET_KEY environment variable must be set")
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production-12345")
 
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))

@@ -8,11 +8,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi import status as http_status
 from sqlmodel import Session
 
-
 # Fix for FastAPI type annotation conflicts
 status = http_status
 
-
 from .. import schemas
 from ..database import get_db
 from ..dependencies import get_current_user
@@ -23,11 +21,11 @@ from ..crud import (
 from ..models import User, RecurrenceType
 
 
-# User-level reminder endpoints
-user_reminders_router = APIRouter(prefix="/reminders", tags=["reminders"])
+# Main router for reminders
+router = APIRouter(tags=["reminders"])
 
 
-@user_reminders_router.get("/pending", response_model=list[schemas.ReminderResponse])
+@router.get("/pending", response_model=list[schemas.ReminderResponse])
 async def get_pending_reminders(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -39,43 +37,7 @@ async def get_pending_reminders(
     return reminders
 
 
-# Task-specific reminder endpoints
-task_reminders_router = APIRouter(prefix="/tasks", tags=["tasks"])
-
-
-@task_reminders_router.post("/{task_id}/due-date", response_model=schemas.TaskResponse)
-
-from .. import schemas
-from ..database import get_db
-from ..dependencies import get_current_user
-from ..crud import (
-    get_task_by_id_and_user, update_task,
-    get_reminders_by_task, create_reminder, get_user_pending_reminders
-)
-from ..models import User, RecurrenceType
-
-
-# User-level reminder endpoints
-user_reminders_router = APIRouter(prefix="/reminders", tags=["reminders"])
-
-
-@user_reminders_router.get("/pending", response_model=list[schemas.ReminderResponse])
-async def get_pending_reminders(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Get all pending reminders for the authenticated user.
-    """
-    reminders = get_user_pending_reminders(db, user_id=str(current_user.id))
-    return reminders
-
-
-# Task-specific reminder endpoints
-task_reminders_router = APIRouter(prefix="/tasks", tags=["tasks"])
-
-
-@task_reminders_router.post("/{task_id}/due-date", response_model=schemas.TaskResponse)
+@router.post("/tasks/{task_id}/due-date", response_model=schemas.TaskResponse)
 async def set_task_due_date(
     task_id: str,
     due_date_update: schemas.DueDateUpdate,
@@ -107,7 +69,7 @@ async def set_task_due_date(
     return updated_task
 
 
-@task_reminders_router.post("/{task_id}/recurrence", response_model=schemas.TaskResponse)
+@router.post("/tasks/{task_id}/recurrence", response_model=schemas.TaskResponse)
 async def set_task_recurrence(
     task_id: str,
     recurrence_config: schemas.RecurrenceConfig,
@@ -131,7 +93,7 @@ async def set_task_recurrence(
     # Validate recurrence interval
     if recurrence_config.recurrence_interval <= 0:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_SERVER,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Recurrence interval must be greater than 0"
         )
 
@@ -153,7 +115,7 @@ async def set_task_recurrence(
     return updated_task
 
 
-@task_reminders_router.post("/{task_id}/reminders", response_model=schemas.ReminderResponse)
+@router.post("/tasks/{task_id}/reminders", response_model=schemas.ReminderResponse)
 async def create_task_reminder(
     task_id: str,
     reminder: schemas.ReminderCreate,
@@ -186,7 +148,7 @@ async def create_task_reminder(
     return db_reminder
 
 
-@task_reminders_router.get("/{task_id}/reminders", response_model=list[schemas.ReminderResponse])
+@router.get("/tasks/{task_id}/reminders", response_model=list[schemas.ReminderResponse])
 async def get_task_reminders(
     task_id: str,
     current_user: User = Depends(get_current_user),

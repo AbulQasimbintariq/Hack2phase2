@@ -1,8 +1,9 @@
 """
 Database configuration and session management.
+Using SQLite for local development.
 """
 
-from sqlmodel import create_engine, Session
+from sqlmodel import create_engine, Session, SQLModel
 from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
@@ -10,21 +11,29 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Database configuration
+# Database configuration - Use SQLite for local development
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://user:password@localhost:5432/todoapp"
+    "sqlite:///./todoapp.db"
 )
 
-# Create database engine with connection pooling
-engine = create_engine(
-    DATABASE_URL,
-    pool_size=10,
-    max_overflow=20,
-    pool_timeout=30,
-    pool_recycle=3600,
-    echo=os.getenv("SQL_ECHO", "False").lower() == "true"
-)
+# Create database engine
+# For SQLite, we need to handle connection args differently
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        echo=os.getenv("SQL_ECHO", "False").lower() == "true"
+    )
+else:
+    engine = create_engine(
+        DATABASE_URL,
+        pool_size=10,
+        max_overflow=20,
+        pool_timeout=30,
+        pool_recycle=3600,
+        echo=os.getenv("SQL_ECHO", "False").lower() == "true"
+    )
 
 # Session factory for database operations
 SessionLocal = sessionmaker(
@@ -54,7 +63,7 @@ def create_tables():
     Call this during application startup.
     """
     from . import models
-    models.SQLModel.metadata.create_all(engine)
+    SQLModel.metadata.create_all(engine)
 
 
 def drop_tables():
@@ -63,4 +72,4 @@ def drop_tables():
     Use with caution - destructive operation!
     """
     from . import models
-    models.SQLModel.metadata.drop_all(engine)
+    SQLModel.metadata.drop_all(engine)
