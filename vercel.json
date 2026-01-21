@@ -3,17 +3,14 @@
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "functions": {
-    "api/serverless/*.py": {
+    "api/serverless/index.py": {
       "maxDuration": 60
-    },
-    "api/serverless-cron/*.py": {
-      "maxDuration": 120
     }
   },
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/serverless/:path*"
+      "destination": "/api/serverless/index.py"
     }
   ],
   "crons": [
